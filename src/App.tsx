@@ -1,16 +1,12 @@
-// src/App.tsx
+import React from 'react';
+import FileExplorer from './components/FileExplorer';
+import { EXPANDED_FOLDERS } from './utils/constants';
 
-import React, { Component } from 'react';
-
-interface AppProps {}
-
-interface AppState {}
-
-class App extends Component<AppProps, AppState> {
+class App extends React.Component {
   render() {
     return (
-      <div className="App">
-        
+      <div>
+        <FileExplorer expandedFolders={EXPANDED_FOLDERS} />
       </div>
     );
   }
