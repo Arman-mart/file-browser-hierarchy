@@ -13,27 +13,39 @@ class FileExplorer extends React.Component<FileExplorerProps, FileExplorerState>
       data: [],
       loading: true,
       searchQuery: '',
+      error: '',
     };
   }
 
   componentDidMount() {
-    fetch(`${process.env.PUBLIC_URL}/data.json`)
+    fetch(`/data.json`)
       .then((response) => response.json())
       .then((data) => this.setState({ data, loading: false }))
-      .catch((error) => console.error('Error fetching data:', error));
+      .catch((error) => {
+        console.error('Error fetching data:', error);
+        this.setState({ loading: false, error: error.message });
+      });
   }
 
   handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({ searchQuery: event.target.value });
   };
 
-  render() {
-    const { data, loading, searchQuery } = this.state;
-    const { expandedFolders } = this.props;
+  renderLoading = () => {
+    return <div>Loading...</div>;
+  };
 
-    if (loading) {
-      return <div>Loading...</div>;
-    }
+  renderError = () => {
+    return (
+      <div>
+        <p>Error fetching data: {this.state.error}</p>
+      </div>
+    );
+  };
+
+  renderData = () => {
+    const { data, searchQuery } = this.state;
+    const { expandedFolders } = this.props;
 
     return (
       <div>
@@ -54,7 +66,22 @@ class FileExplorer extends React.Component<FileExplorerProps, FileExplorerState>
         ))}
       </div>
     );
+  };
+
+  render() {
+    const { loading, error } = this.state;
+
+    if (loading) {
+      return this.renderLoading();
+    }
+
+    if (error) {
+      return this.renderError();
+    }
+
+    return this.renderData();
   }
 }
+
 
 export default FileExplorer;

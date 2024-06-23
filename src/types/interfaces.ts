@@ -15,5 +15,6 @@ export interface FileNode {
     data: Array<FolderNode>;
     loading: boolean;
     searchQuery: string;
+    error: string;
   }
   
