@@ -73,18 +73,17 @@ class FileExplorer extends Component<FileExplorerProps, FileExplorerState> {
   };
 
   render() {
-    const { loading, error } = this.state;
+  const { loading, error } = this.state;
 
-    if (loading) {
+  if (loading) {
       return this.renderLoading();
-    }
-
-    if (error) {
+  } else if (error) {
       return this.renderError();
-    }
-
+  } else {
     return this.renderData();
   }
+}
+
 }
 
 export default FileExplorer;
