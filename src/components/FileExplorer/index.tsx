@@ -1,12 +1,12 @@
-import React from 'react';
+import { Component, ChangeEvent } from 'react';
 import Folder from '../Folder';
-import { FileExplorerState } from '../../types';
+import { FileExplorerState, FolderNode } from '../../types';
 
 interface FileExplorerProps {
   expandedFolders: string[];
 }
 
-class FileExplorer extends React.Component<FileExplorerProps, FileExplorerState> {
+class FileExplorer extends Component<FileExplorerProps, FileExplorerState> {
   constructor(props: FileExplorerProps) {
     super(props);
     this.state = {
@@ -18,30 +18,34 @@ class FileExplorer extends React.Component<FileExplorerProps, FileExplorerState>
   }
 
   componentDidMount() {
-    fetch(`/data.json`)
-      .then((response) => response.json())
-      .then((data) => this.setState({ data, loading: false }))
-      .catch((error) => {
-        console.error('Error fetching data:', error);
-        this.setState({ loading: false, error: error.message });
-      });
+    this.fetchData();
   }
 
-  handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  fetchData = async () => {
+    try {
+      const response = await fetch(`/data.json`);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data: FolderNode[] = await response.json();
+      this.setState({ data, loading: false });
+    } catch (error: any) {
+      console.error('Error fetching data:', error);
+      this.setState({ loading: false, error: error.message });
+    }
+  };
+
+  handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
     this.setState({ searchQuery: event.target.value });
   };
 
-  renderLoading = () => {
-    return <div>Loading...</div>;
-  };
+  renderLoading = () => <div>Loading...</div>;
 
-  renderError = () => {
-    return (
-      <div>
-        <p>Error fetching data: {this.state.error}</p>
-      </div>
-    );
-  };
+  renderError = () => (
+    <div>
+      <p>Error fetching data: {this.state.error}</p>
+    </div>
+  );
 
   renderData = () => {
     const { data, searchQuery } = this.state;
@@ -82,6 +86,5 @@ class FileExplorer extends React.Component<FileExplorerProps, FileExplorerState>
     return this.renderData();
   }
 }
-
 
 export default FileExplorer;

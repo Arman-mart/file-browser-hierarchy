@@ -1,23 +1,30 @@
-import React from 'react';
+import { Component } from 'react';
 import File from '../File';
 import { FileNode, FolderNode } from '../../types';
 
+interface FolderProps extends FolderNode {
+  expandedFolders: string[];
+  searchQuery: string;
+  path: string;
+}
 
 interface FolderState {
   collapsed: boolean;
 }
 
-class Folder extends React.Component<FolderNode, FolderState> {
-  constructor(props: FolderNode) {
+class Folder extends Component<FolderProps, FolderState> {
+  constructor(props: FolderProps) {
     super(props);
     this.state = {
-      collapsed: !this.props.expandedFolders.includes(this.props.path),
+      collapsed: !props.expandedFolders.includes(props.path),
     };
   }
+  componentDidUpdate(prevProps: FolderProps) {
+    const expandedFoldersChanged = prevProps.expandedFolders !== this.props.expandedFolders;
+    const pathChanged = prevProps.path !== this.props.path;
 
-  componentDidUpdate(prevProps: FolderNode) {
-    if (prevProps.searchQuery !== this.props.searchQuery) {
-      this.forceUpdate();
+    if (expandedFoldersChanged || pathChanged) {
+      this.setState({ collapsed: !this.props.expandedFolders.includes(this.props.path) });
     }
   }
 
@@ -25,50 +32,55 @@ class Folder extends React.Component<FolderNode, FolderState> {
     this.setState((state) => ({ collapsed: !state.collapsed }));
   };
 
+  filterChildren(children: (FileNode | FolderNode)[], searchQuery: string): (FileNode | FolderNode)[] {
+    return children.filter((child) => {
+      if ('mime' in child) {
+        return !searchQuery || child.name.toLowerCase().includes(searchQuery.toLowerCase());
+      }
+      return (
+        child.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        this.filterChildren(child.children, searchQuery).length > 0
+      );
+    });
+  }
+
+  hasMatchingChild(children: (FileNode | FolderNode)[], searchQuery: string): boolean {
+    return children.some((child) => {
+      if ('mime' in child) {
+        return child.name.toLowerCase().includes(searchQuery.toLowerCase());
+      }
+      return (
+        child.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        this.hasMatchingChild(child.children, searchQuery)
+      );
+    });
+  }
+
   renderChildren() {
     const { children, expandedFolders, searchQuery, path } = this.props;
     const { collapsed } = this.state;
-
-    const filteredChildren = children.filter((child) => {
-      if ('mime' in child) {
-        return !searchQuery || child.name.toLowerCase().includes(searchQuery.toLowerCase());
-      } else {
-        return (
-          child.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          child.children.some((grandchild) =>
-            'mime' in grandchild
-              ? grandchild.name.toLowerCase().includes(searchQuery.toLowerCase())
-              : grandchild.children.some((greatGrandchild) =>
-                'mime' in greatGrandchild
-                  ? greatGrandchild.name.toLowerCase().includes(searchQuery.toLowerCase())
-                  : false
-              )
-          )
-        );
-      }
-    });
 
     if (collapsed && !searchQuery) {
       return null;
     }
 
+    const filteredChildren = this.filterChildren(children, searchQuery);
+
     return (
       <div style={{ paddingLeft: '20px' }}>
-        {filteredChildren.map((child, index) => {
-          if ('mime' in child) {
-            return <File key={index} {...child} />;
-          } else {
-            return (
-              <Folder
-                key={index}
-                {...child}
-                path={`${path}/${child.name}`}
-                expandedFolders={expandedFolders}
-                searchQuery={searchQuery}
-              />
-            );
-          }
-        })}
+        {filteredChildren.map((child, index) => (
+          'mime' in child ? (
+            <File key={index} {...child} />
+          ) : (
+            <Folder
+              key={index}
+              {...child}
+              path={`${path}/${child.name}`}
+              expandedFolders={expandedFolders}
+              searchQuery={searchQuery}
+            />
+          )
+        ))}
       </div>
     );
   }
@@ -76,21 +88,10 @@ class Folder extends React.Component<FolderNode, FolderState> {
   render() {
     const { name, searchQuery, children } = this.props;
 
-    const hasMatchingChild = children.some((child) =>
-      'mime' in child
-        ? child.name.toLowerCase().includes(searchQuery.toLowerCase())
-        : child.children.some((grandchild: FileNode | FolderNode) =>
-          'mime' in grandchild
-            ? grandchild.name.toLowerCase().includes(searchQuery.toLowerCase())
-            : grandchild.children.some((greatGrandchild: FileNode | FolderNode) =>
-              'mime' in greatGrandchild
-                ? greatGrandchild.name.toLowerCase().includes(searchQuery.toLowerCase())
-                : false
-            )
-        )
-    );
+    const doesNotMatchSearchQuery = searchQuery && !name.toLowerCase().includes(searchQuery.toLowerCase());
+    const hasNoMatchingChild = !this.hasMatchingChild(children, searchQuery);
 
-    if (searchQuery && !name.toLowerCase().includes(searchQuery.toLowerCase()) && !hasMatchingChild) {
+    if (doesNotMatchSearchQuery && hasNoMatchingChild) {
       return null;
     }
 
