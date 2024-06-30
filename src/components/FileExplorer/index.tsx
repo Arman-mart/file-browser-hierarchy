@@ -76,12 +76,14 @@ class FileExplorer extends Component<FileExplorerProps, FileExplorerState> {
   const { loading, error } = this.state;
 
   if (loading) {
-      return this.renderLoading();
-  } else if (error) {
-      return this.renderError();
-  } else {
-      return this.renderData();
+    return this.renderLoading();
   }
+  
+  if (error) {
+    return this.renderError();
+  }
+
+  return this.renderData();
 }
 
 }
