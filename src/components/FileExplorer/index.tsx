@@ -80,7 +80,7 @@ class FileExplorer extends Component<FileExplorerProps, FileExplorerState> {
   } else if (error) {
       return this.renderError();
   } else {
-    return this.renderData();
+      return this.renderData();
   }
 }
 
