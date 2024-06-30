@@ -1,11 +1,9 @@
-import React from 'react';
+import { Component } from "react";
+import { FileNode } from "../../types";
 
-interface FileProps {
-  name: string;
-  mime: string;
-}
+interface FileProps extends FileNode {}
 
-class File extends React.Component<FileProps> {
+class File extends Component<FileProps> {
   render() {
     return (
       <div style={{ paddingLeft: '20px' }}>

@@ -2,11 +2,7 @@ import { Component } from 'react';
 import File from '../File';
 import { FileNode, FolderNode } from '../../types';
 
-interface FolderProps extends FolderNode {
-  expandedFolders: string[];
-  searchQuery: string;
-  path: string;
-}
+interface FolderProps extends FolderNode {}
 
 interface FolderState {
   collapsed: boolean;
